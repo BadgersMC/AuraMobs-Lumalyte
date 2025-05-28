@@ -1,6 +1,8 @@
 # AuraMobs-Lumalyte
 An add-on for AuraSkills adding mob levels based on skills.
 
+Fork made for Lumalyte.net
+
 >   Added support for advanced, nested player level formulas in config (exp4j)
 >   * Now supports deeply nested max(...) and min(...) expressions, allowing for complex skill-based scaling.
 >   * Example: Player level can now be calculated with weighted skills, specialization bonuses, and penalties for neglected skills.
