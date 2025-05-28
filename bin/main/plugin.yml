@@ -1,0 +1,14 @@
+main: dev.aurelium.auramobs.AuraMobs
+name: AuraMobs
+authors: [Archyx, _OfTeN_]
+version: ${projectVersion}
+api-version: 1.21
+depend:
+  - AuraSkills
+softdepend:
+  - PlaceholderAPI
+  - WorldGuard
+  - MythicMobs
+permissions:
+  auramobs.reload:
+    default: op

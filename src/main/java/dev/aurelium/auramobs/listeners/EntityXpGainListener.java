@@ -5,6 +5,7 @@ import dev.aurelium.auramobs.util.MessageUtils;
 import dev.aurelium.auraskills.api.event.skill.EntityXpGainEvent;
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
+import net.objecthunter.exp4j.function.Function;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,8 +41,22 @@ public class EntityXpGainListener implements Listener {
         String defaultFormula = MessageUtils.setPlaceholders(player, plugin.optionString("skills_xp.default_formula"))
                 .replace("{source_xp}", String.valueOf(sourceXp))
                 .replace("{mob_level}", String.valueOf(mobLevel));
-        Expression formula = new ExpressionBuilder(defaultFormula).build();
+        Expression formula = new ExpressionBuilder(defaultFormula)
+                .function(new Function("max", 2) {
+                    @Override
+                    public double apply(double... args) {
+                        return Math.max(args[0], args[1]);
+                    }
+                })
+                .function(new Function("min", 2) {
+                    @Override
+                    public double apply(double... args) {
+                        return Math.min(args[0], args[1]);
+                    }
+                })
+                .build();
         double modifiedXp = formula.evaluate();
+
         event.setAmount(modifiedXp);
     }
 

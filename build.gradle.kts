@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     `java-library`
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("io.github.goooler.shadow") version "8.1.8"
 }
 
 group = "dev.aurelium"
@@ -18,6 +18,15 @@ repositories {
     maven("https://maven.enginehub.org/repo/")
     maven("https://repo.aikar.co/content/groups/aikar/")
     maven("https://mvn.lumine.io/repository/maven-public/")
+    maven {
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
+    maven {
+        url = uri("https://maven.nostal.ink/repository/maven-snapshots/")
+    }
+    maven {
+        url = uri("https://repo.dreeam.cn/repository/maven-public/")
+    }
 }
 
 dependencies {
@@ -28,10 +37,15 @@ dependencies {
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
     implementation("org.bstats:bstats-bukkit:3.0.2")
     compileOnly("dev.aurelium:auraskills-api-bukkit:2.2.0")
-    compileOnly("org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.7-SNAPSHOT")
     compileOnly("io.lumine:Mythic-Dist:5.6.1")
+    compileOnly("cn.dreeam.leaf:leaf-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly( "com.github.cryptomorin:kingdoms:1.17.10-BETA")
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 tasks.withType<ShadowJar> {
@@ -42,13 +56,10 @@ tasks.withType<ShadowJar> {
     relocate("co.aikar.locales", "dev.aurelium.auramobs.locales")
     relocate("com.archyx.polyglot", "dev.aurelium.auramobs.polyglot")
     relocate("org.bstats", "dev.aurelium.auramobs.bstats")
-    relocate("net.kyori", "dev.aurelium.auramobs.kyori")
     relocate("net.objecthunter.exp4j", "dev.aurelium.auramobs.exp4j")
     relocate("org.spongepowered.configurate", "dev.aurelium.auramobs.configurate")
     relocate("io.leangen.geantyref", "dev.aurelium.auramobs.geantyref")
 }
-
-java.sourceCompatibility = JavaVersion.VERSION_17
 
 tasks {
     processResources {
@@ -71,9 +82,9 @@ tasks {
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+    options.isDebug = true
     options.compilerArgs.add("-parameters")
     options.isFork = true
-    options.forkOptions.executable = "javac"
 }
 
 publishing {

@@ -68,7 +68,7 @@ public class AuraMobsAPI {
         if (!(e instanceof LivingEntity m)) {
             return 1;
         }
-        return BigDecimal.valueOf(m.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()).setScale(2, RoundingMode.CEILING).doubleValue();
+        return BigDecimal.valueOf(m.getAttribute(Attribute.MAX_HEALTH).getValue()).setScale(2, RoundingMode.CEILING).doubleValue();
     }
 
     /**
@@ -80,7 +80,7 @@ public class AuraMobsAPI {
         if (!(e instanceof LivingEntity m)) {
             return 1;
         }
-        return BigDecimal.valueOf(m.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()).setScale(2, RoundingMode.CEILING).intValue();
+        return BigDecimal.valueOf(m.getAttribute(Attribute.MAX_HEALTH).getValue()).setScale(2, RoundingMode.CEILING).intValue();
     }
 
 }

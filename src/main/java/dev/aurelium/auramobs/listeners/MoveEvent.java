@@ -21,7 +21,7 @@ public class MoveEvent implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        int range = plugin.optionInt("custom_name.display_range");
+        double range = plugin.optionInt("custom_name.display_range");
 
         World fromWorld = e.getFrom().getWorld();
         if (e.getTo() == null) return;
@@ -42,8 +42,11 @@ public class MoveEvent implements Listener {
         }
 
         to.forEach(mob -> {
-            if (!from.contains(mob)) {
-                mob.setCustomNameVisible(e.getPlayer().hasLineOfSight(mob));
+            double distance = mob.getLocation().distance(e.getPlayer().getLocation());
+            if (distance <= range && e.getPlayer().hasLineOfSight(mob)) {
+                mob.setCustomNameVisible(true);
+            } else {
+                mob.setCustomNameVisible(false);
             }
         });
         from.forEach(mob -> {

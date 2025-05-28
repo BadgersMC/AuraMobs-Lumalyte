@@ -6,8 +6,10 @@ import dev.aurelium.auramobs.entities.AureliumMob;
 import dev.aurelium.auramobs.util.MessageUtils;
 import io.lumine.mythic.core.constants.MobKeys;
 import net.objecthunter.exp4j.ExpressionBuilder;
+import net.objecthunter.exp4j.function.Function;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -19,6 +21,13 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.NamespacedKey;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.aurelium.auramobs.util.ColorUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -73,7 +82,18 @@ public class MobSpawn implements Listener {
 
             int radius = plugin.optionInt("player_level.check_radius");
 
-            changeMob(entity, radius).runTask(plugin);
+            // attempt to fix some datapack mobs not showing tags (they are set to invisible)
+            if (e.getSpawnReason().name().equalsIgnoreCase("CUSTOM") || e.getSpawnReason().name().equalsIgnoreCase("COMMAND")) {
+                changeMob(entity, radius).runTaskLater(plugin, 1L);
+            } else {
+                changeMob(entity, radius).runTask(plugin);
+            }
+
+            // Mark mob as Blood Moon mob if event is active
+            if (plugin.getBloodMoonManager().isEventActive()) {
+                plugin.getBloodMoonManager().markBloodMoonMob(entity);
+            }
+
         } catch (NullPointerException ex) {
             plugin.getLogger().severe(ex.getMessage());
         }
@@ -143,6 +163,47 @@ public class MobSpawn implements Listener {
                     level = getCalculatedLevel(entity, playercount, distance, maxlevel, minlevel, sumlevel);
                 }
                 new AureliumMob(entity, correctLevel(entity.getLocation(), level), plugin);
+
+                // Register mob for attraction/pathfinding
+                plugin.getMobAttractionManager().registerMob(entity);
+
+                // Set the custom nametag (moved from MobDamage)
+                if (plugin.isNamesEnabled()) { // Check if custom names are enabled
+                    double resHealth = entity.getHealth(); // Use current health on spawn
+                    String formattedHealth = plugin.getFormatter().format(resHealth);
+
+                    // Construct the nametag string with legacy color codes
+                    String nametagString;
+                    try {
+                        nametagString = plugin.optionString("custom_name.format")
+                                .replace("{mob}", plugin.getMsg("mobs." + entity.getType().name().toLowerCase(Locale.ROOT)))
+                                .replace("{lvl}", Integer.toString(level))
+                                .replace("{health}", formattedHealth)
+                                .replace("{maxhealth}", plugin.getFormatter().format(entity.getAttribute(Attribute.MAX_HEALTH).getValue()));
+                    } catch (NullPointerException ex) {
+                        // Fallback if config option is missing
+                        nametagString = plugin.optionString("custom_name.format")
+                                .replace("{mob}", entity.getType().name())
+                                .replace("{lvl}", Integer.toString(level))
+                                .replace("{health}", formattedHealth)
+                                .replace("{maxhealth}", plugin.getFormatter().format(entity.getAttribute(Attribute.MAX_HEALTH).getValue()));
+                    }
+
+                    // Convert the legacy color code string to an Adventure Component
+                    Component nametagComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(ColorUtils.colorMessage(nametagString));
+
+                    // Set the custom name using the Adventure API
+                    entity.customName(nametagComponent);
+                    entity.setCustomNameVisible(false); // Set to false by default
+                    // Prepend Blood Moon emoji if this is a Blood Moon mob
+                    NamespacedKey bloodMoonKey = new NamespacedKey(plugin, "bloodmoon_mob");
+                    if (plugin.getBloodMoonManager().isEventActive() &&
+                        entity.getPersistentDataContainer().has(bloodMoonKey, PersistentDataType.BYTE)) {
+                        // Unicode U+E014 for LumaLyte moon logo, colored red
+                        Component bloodMoonPrefix = Component.text("\uE014 ").color(NamedTextColor.RED);
+                        entity.customName(bloodMoonPrefix.append(entity.customName() != null ? entity.customName() : Component.empty()));
+                    }
+                }
             }
         };
     }
@@ -178,7 +239,22 @@ public class MobSpawn implements Listener {
                     .replace("{random_double}", String.valueOf(random.nextDouble()))
             );
         }
-        level = (int) new ExpressionBuilder(lformula).build().evaluate();
+
+        level = (int) new ExpressionBuilder(lformula)
+                .function(new Function("max", 2) {
+                    @Override
+                    public double apply(double... args) {
+                        return Math.max(args[0], args[1]);
+                    }
+                })
+                .function(new Function("min", 2) {
+                    @Override
+                    public double apply(double... args) {
+                        return Math.min(args[0], args[1]);
+                    }
+                })
+                .build().evaluate();
+
         level = Math.min(level, plugin.optionInt(prefix + "max_level"));
         return level;
     }

@@ -138,6 +138,10 @@ public class ScaleManager {
         return scaleAttribute != null;
     }
 
+    public Attribute getScaleAttribute() {
+        return scaleAttribute;
+    }
+
     private boolean passWorld(World world) {
         if (worldWhitelist) {
             if (enabledWorlds.contains("*")) return true;

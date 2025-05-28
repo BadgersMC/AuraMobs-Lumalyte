@@ -2,7 +2,7 @@ main: dev.aurelium.auramobs.AuraMobs
 name: AuraMobs
 authors: [Archyx, _OfTeN_]
 version: ${projectVersion}
-api-version: 1.16
+api-version: 1.21
 depend:
   - AuraSkills
 softdepend:
